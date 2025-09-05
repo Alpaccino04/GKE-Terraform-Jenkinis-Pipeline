@@ -66,10 +66,6 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "cluster_version" {
-  description = "GKE cluster version"
-  type        = string
-}
 
 variable "node_pools" {
   description = "List of node pools for the GKE cluster"

@@ -43,7 +43,6 @@ resource "google_container_cluster" "gke" {
     channel = "REGULAR"
   }
 
-  min_master_version = var.cluster_version
 }
 
 # === Node Pools ===

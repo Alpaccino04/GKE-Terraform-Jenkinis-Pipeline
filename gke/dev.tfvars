@@ -14,7 +14,6 @@ services_secondary_cidr       = "10.2.0.0/20"
 
 is_gke_cluster_enabled = true
 cluster_name           = "dev-gke-cluster"
-cluster_version        = "1.29.4-gke.1045000"
 
 node_pools = [
   {
