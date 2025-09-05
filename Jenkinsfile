@@ -19,7 +19,7 @@ pipeline {
         }
         stage('Git Pulling') {
             steps {
-                git branch: 'master', url: 'https://github.com/AmanPathak-DevOps/GKE-Terraform-GitHub-Actions.git'
+                git branch: 'master', url: 'https://github.com/Alpaccino04/GKE-Terraform-Jenkinis-Pipeline.git'
             }
         }
         stage('Init') {
