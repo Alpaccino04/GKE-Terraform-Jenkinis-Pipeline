@@ -76,6 +76,8 @@ variable "node_pools" {
     max_count          = number
     initial_node_count = number
     spot               = bool
+    disk_size_gb       = optional(number, 100)       # default 100GB
+    disk_type          = optional(string, "pd-standard") # default pd-standard
   }))
 }
 

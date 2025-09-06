@@ -23,6 +23,8 @@ node_pools = [
     max_count          = 3
     initial_node_count = 1
     spot               = true
+    disk_size_gb       = 50
+    disk_type          = "pd-standard"
   },
   {
     name               = "cpu-pool"
@@ -31,7 +33,10 @@ node_pools = [
     max_count          = 5
     initial_node_count = 1
     spot               = false
+    disk_size_gb       = 100
+    disk_type          = "pd-standard"
   }
 ]
+
 
 addons = ["Monitoring", "Logging"]

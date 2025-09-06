@@ -54,10 +54,14 @@ resource "google_container_node_pool" "node_pools" {
   name     = each.value.name
 
   node_config {
-    machine_type = each.value.machine_type
-    spot         = each.value.spot
-    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+   machine_type = each.value.machine_type
+   spot         = each.value.spot
+   oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+
+   disk_size_gb = lookup(each.value, "disk_size_gb", 100)
+   disk_type    = lookup(each.value, "disk_type", "pd-standard")
   }
+
 
   autoscaling {
     min_node_count = each.value.min_count
