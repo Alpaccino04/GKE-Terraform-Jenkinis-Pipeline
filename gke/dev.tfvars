@@ -28,7 +28,7 @@ node_pools = [
   },
   {
     name               = "cpu-pool"
-    machine_type       = "e2-standard-4"
+    machine_type       = "e2-small"
     min_count          = 0
     max_count          = 1
     initial_node_count = 1
