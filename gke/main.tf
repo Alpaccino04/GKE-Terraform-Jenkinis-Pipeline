@@ -33,13 +33,13 @@ resource "google_container_cluster" "gke" {
 
   initial_node_count       = 1
   remove_default_node_pool = true
-  deletion_protection = false
+  deletion_protection      = false
 
-  # ✅ Fix: explicitly set disk type & size here
+  # ✅ Explicit disk settings
   node_config {
     disk_type    = "pd-standard"
     disk_size_gb = 50
-    machine_type = "e2-medium" # must be specified too
+    machine_type = "e2-medium"
     oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 
@@ -57,8 +57,9 @@ resource "google_container_cluster" "gke" {
 resource "google_container_node_pool" "node_pools" {
   for_each = { for np in var.node_pools : np.name => np }
 
-  cluster  = google_container_cluster.gke[0].name
-  location = var.gcp_region
+  # ✅ Use full cluster ID so Terraform doesn’t break
+  cluster  = google_container_cluster.gke[0].id
+  location = var.gcp_zone
   name     = each.value.name
 
   node_config {
@@ -76,6 +77,9 @@ resource "google_container_node_pool" "node_pools" {
   }
 
   initial_node_count = each.value.initial_node_count
+
+  # ✅ Wait until cluster is ready before creating node pools
+  depends_on = [google_container_cluster.gke]
 }
 
 # === Addons (just an output for visibility) ===
