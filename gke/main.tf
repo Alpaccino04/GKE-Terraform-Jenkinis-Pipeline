@@ -34,6 +34,14 @@ resource "google_container_cluster" "gke" {
   initial_node_count       = 1
   remove_default_node_pool = true
 
+  # ✅ Fix: explicitly set disk type & size here
+  node_config {
+    disk_type    = "pd-standard"
+    disk_size_gb = 50
+    machine_type = "e2-medium" # must be specified too
+    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+  }
+
   ip_allocation_policy {
     cluster_secondary_range_name  = var.pods_secondary_range_name
     services_secondary_range_name = var.services_secondary_range_name
@@ -42,7 +50,6 @@ resource "google_container_cluster" "gke" {
   release_channel {
     channel = "REGULAR"
   }
-
 }
 
 # === Node Pools ===
@@ -54,14 +61,13 @@ resource "google_container_node_pool" "node_pools" {
   name     = each.value.name
 
   node_config {
-   machine_type = each.value.machine_type
-   spot         = each.value.spot
-   oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    machine_type = each.value.machine_type
+    spot         = each.value.spot
+    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
 
-   disk_size_gb = lookup(each.value, "disk_size_gb", 100)
-   disk_type    = lookup(each.value, "disk_type", "pd-standard")
+    disk_size_gb = lookup(each.value, "disk_size_gb", 100)
+    disk_type    = lookup(each.value, "disk_type", "pd-standard")
   }
-
 
   autoscaling {
     min_node_count = each.value.min_count
