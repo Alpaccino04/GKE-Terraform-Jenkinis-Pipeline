@@ -22,7 +22,7 @@ node_pools = [
     min_count          = 1
     max_count          = 1
     initial_node_count = 1
-    spot               = true
+    spot               = false
     disk_size_gb       = 50
     disk_type          = "pd-standard"
   },

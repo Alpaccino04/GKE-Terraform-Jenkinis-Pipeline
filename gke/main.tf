@@ -33,6 +33,7 @@ resource "google_container_cluster" "gke" {
 
   initial_node_count       = 1
   remove_default_node_pool = true
+  deletion_protection = false
 
   # ✅ Fix: explicitly set disk type & size here
   node_config {
