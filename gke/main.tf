@@ -51,6 +51,13 @@ resource "google_container_cluster" "gke" {
   release_channel {
     channel = "REGULAR"
   }
+
+  # prevent Terraform from trying to update a node pool that no longer exists
+  lifecycle {
+    ignore_changes = [
+      node_pool,  # ignore default node pool changes
+    ]
+  }
 }
 
 # === Node Pools ===
