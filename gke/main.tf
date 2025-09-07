@@ -87,12 +87,11 @@ resource "google_container_node_pool" "node_pools" {
   depends_on = [google_container_cluster.gke]
 }
 
-# === Project-level OS Login (for IAP SSH to nodes) ===
-resource "google_project_metadata" "oslogin" {
+# === Enable OS Login at project level ===
+resource "google_compute_project_metadata_item" "enable_oslogin" {
   project = var.project_id
-  metadata = {
-    enable-oslogin = "TRUE"
-  }
+  key     = "enable-oslogin"
+  value   = "TRUE"
 }
 
 # === Output (optional) ===
