@@ -41,7 +41,7 @@ resource "google_compute_subnetwork" "subnet_with_secondary_ranges" {
 }
 
 # -----------------------------
-# Firewall Rules (equivalent of AWS Security Group)
+# Firewall Rules (locked to IAP)
 # -----------------------------
 resource "google_compute_firewall" "gke_firewall" {
   name    = "${var.env}-${local.cluster_name}-fw"
@@ -52,9 +52,11 @@ resource "google_compute_firewall" "gke_firewall" {
     ports    = ["443"]
   }
 
-  source_ranges = ["0.0.0.0/0"] # Replace with specific IP ranges if needed
-  direction     = "INGRESS"
-  target_tags   = ["gke-cluster"]
+  # Restrict to IAP proxy range only
+  source_ranges = ["35.235.240.0/20"]
+
+  direction   = "INGRESS"
+  target_tags = ["gke-cluster"]
 }
 
 resource "google_compute_firewall" "gke_egress" {
@@ -65,8 +67,8 @@ resource "google_compute_firewall" "gke_egress" {
     protocol = "all"
   }
 
-  direction     = "EGRESS"
-  destination_ranges = ["0.0.0.0/0"]
+  direction           = "EGRESS"
+  destination_ranges  = ["0.0.0.0/0"]
 }
 
 # -----------------------------
@@ -79,9 +81,9 @@ resource "google_compute_router" "nat_router" {
 }
 
 resource "google_compute_router_nat" "nat" {
-  name                               = "${var.env}-${local.cluster_name}-nat"
-  router                             = google_compute_router.nat_router.name
-  region                             = var.gcp_region
-  nat_ip_allocate_option              = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat  = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  name                              = "${var.env}-${local.cluster_name}-nat"
+  router                            = google_compute_router.nat_router.name
+  region                            = var.gcp_region
+  nat_ip_allocate_option            = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }

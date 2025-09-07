@@ -4,14 +4,13 @@ resource "google_compute_network" "vpc" {
   auto_create_subnetworks = false
 }
 
-# === Subnet ===
+# === Subnet (with secondary ranges for GKE IP aliasing) ===
 resource "google_compute_subnetwork" "subnet" {
   name          = var.subnet_name
   ip_cidr_range = var.subnet_primary_cidr
   region        = var.subnet_region
   network       = google_compute_network.vpc.id
 
-  # Secondary ranges (for GKE IP aliasing)
   secondary_ip_range {
     range_name    = var.pods_secondary_range_name
     ip_cidr_range = var.pods_secondary_cidr
@@ -24,8 +23,8 @@ resource "google_compute_subnetwork" "subnet" {
 
 # === GKE Cluster ===
 resource "google_container_cluster" "gke" {
-  count   = var.is_gke_cluster_enabled ? 1 : 0
-  name    = var.cluster_name
+  count    = var.is_gke_cluster_enabled ? 1 : 0
+  name     = var.cluster_name
   location = var.gcp_zone
 
   network    = google_compute_network.vpc.id
@@ -34,21 +33,40 @@ resource "google_container_cluster" "gke" {
   initial_node_count       = 1
   remove_default_node_pool = true
   deletion_protection      = false
-  
+
   ip_allocation_policy {
     cluster_secondary_range_name  = var.pods_secondary_range_name
     services_secondary_range_name = var.services_secondary_range_name
   }
 
-  release_channel {
-    channel = "REGULAR"
+  release_channel { channel = "REGULAR" }
+
+  # ✅ Private cluster
+  private_cluster_config {
+    enable_private_nodes    = true
+    enable_private_endpoint = false             # public endpoint exists, but locked down
+    master_ipv4_cidr_block  = "172.16.0.0/28"   # choose a free /28, non-overlapping
   }
 
-  # prevent Terraform from trying to update a node pool that no longer exists
+  # ✅ Restrict master API to IAP proxy only
+  master_authorized_networks_config {
+    cidr_blocks {
+      display_name = "iap-proxy"
+      cidr_block   = "35.235.240.0/20"
+    }
+  }
+
+  # ✅ Force IAM/OS Login for SSH instead of static keys
+  node_config {
+    machine_type = "e2-medium"
+    metadata = {
+      enable-oslogin = "TRUE"
+    }
+    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+  }
+
   lifecycle {
-    ignore_changes = [
-      node_pool,  # ignore default node pool changes
-    ]
+    ignore_changes = [ node_pool ]
   }
 }
 
@@ -56,7 +74,6 @@ resource "google_container_cluster" "gke" {
 resource "google_container_node_pool" "node_pools" {
   for_each = { for np in var.node_pools : np.name => np }
 
-  # ✅ Use full cluster ID so Terraform doesn’t break
   cluster  = google_container_cluster.gke[0].id
   location = var.gcp_zone
   name     = each.value.name
@@ -76,12 +93,10 @@ resource "google_container_node_pool" "node_pools" {
   }
 
   initial_node_count = each.value.initial_node_count
-
-  # ✅ Wait until cluster is ready before creating node pools
   depends_on = [google_container_cluster.gke]
 }
 
-# === Addons (just an output for visibility) ===
+# === Output (optional) ===
 output "enabled_addons" {
   value = var.addons
 }
