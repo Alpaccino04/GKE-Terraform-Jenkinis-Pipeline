@@ -89,7 +89,7 @@ resource "google_container_node_pool" "node_pools" {
 
 # === Enable OS Login at project level ===
 resource "google_compute_project_metadata_item" "enable_oslogin" {
-  project = var.project_id
+  project = var.gcp_project
   key     = "enable-oslogin"
   value   = "TRUE"
 }
