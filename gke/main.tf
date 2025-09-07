@@ -56,15 +56,6 @@ resource "google_container_cluster" "gke" {
     }
   }
 
-  # ✅ Force IAM/OS Login for SSH instead of static keys
-  node_config {
-    machine_type = "e2-medium"
-    metadata = {
-      enable-oslogin = "TRUE"
-    }
-    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-  }
-
   lifecycle {
     ignore_changes = [ node_pool ]
   }
@@ -94,6 +85,14 @@ resource "google_container_node_pool" "node_pools" {
 
   initial_node_count = each.value.initial_node_count
   depends_on = [google_container_cluster.gke]
+}
+
+# === Project-level OS Login (for IAP SSH to nodes) ===
+resource "google_project_metadata" "oslogin" {
+  project = var.project_id
+  metadata = {
+    enable-oslogin = "TRUE"
+  }
 }
 
 # === Output (optional) ===
