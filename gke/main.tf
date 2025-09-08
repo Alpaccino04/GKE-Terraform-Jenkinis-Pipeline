@@ -46,7 +46,7 @@ resource "google_container_cluster" "gke" {
 
   private_cluster_config {
     enable_private_nodes    = true
-    enable_private_endpoint = true   # 👈 Public control plane endpoint
+    enable_private_endpoint = false   # 👈 Public control plane endpoint
     master_ipv4_cidr_block  = "172.16.0.0/28"
   }
 
