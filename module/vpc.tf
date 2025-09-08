@@ -55,7 +55,7 @@ resource "google_compute_firewall" "gke_firewall_ingress" {
   # Allow IAP proxy + your local machine
   source_ranges = [
     "35.235.240.0/20",  # IAP
-    "102.90.103.77"
+    "102.90.103.77/32"
   ]
 
   direction = "INGRESS"

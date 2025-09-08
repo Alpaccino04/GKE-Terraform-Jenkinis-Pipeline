@@ -58,7 +58,7 @@ resource "google_container_cluster" "gke" {
 
     cidr_blocks {
       display_name = "my-pc"
-      cidr_block   = "102.90.103.77"
+      cidr_block   = "102.90.103.77/32"
     }
   }
 
