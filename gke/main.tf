@@ -15,6 +15,7 @@ resource "google_compute_subnetwork" "subnet" {
     range_name    = var.pods_secondary_range_name
     ip_cidr_range = var.pods_secondary_cidr
   }
+
   secondary_ip_range {
     range_name    = var.services_secondary_range_name
     ip_cidr_range = var.services_secondary_cidr
@@ -39,25 +40,30 @@ resource "google_container_cluster" "gke" {
     services_secondary_range_name = var.services_secondary_range_name
   }
 
-  release_channel { channel = "REGULAR" }
-
-  # ✅ Private cluster
-  private_cluster_config {
-    enable_private_nodes    = true
-    enable_private_endpoint = false             # public endpoint exists, but locked down
-    master_ipv4_cidr_block  = "172.16.0.0/28"   # choose a free /28, non-overlapping
+  release_channel {
+    channel = "REGULAR"
   }
 
-  # ✅ Restrict master API to IAP proxy only
+  private_cluster_config {
+    enable_private_nodes    = true
+    enable_private_endpoint = true   # 👈 Public control plane endpoint
+    master_ipv4_cidr_block  = "172.16.0.0/28"
+  }
+
   master_authorized_networks_config {
     cidr_blocks {
       display_name = "iap-proxy"
       cidr_block   = "35.235.240.0/20"
     }
+
+    cidr_blocks {
+      display_name = "my-pc"
+      cidr_block   = "102.90.103.77"
+    }
   }
 
   lifecycle {
-    ignore_changes = [ node_pool ]
+    ignore_changes = [node_pool]
   }
 }
 
@@ -84,6 +90,7 @@ resource "google_container_node_pool" "node_pools" {
   }
 
   initial_node_count = each.value.initial_node_count
+
   depends_on = [google_container_cluster.gke]
 }
 

@@ -41,34 +41,36 @@ resource "google_compute_subnetwork" "subnet_with_secondary_ranges" {
 }
 
 # -----------------------------
-# Firewall Rules (locked to IAP)
+# Firewall Rules (allow IAP + your IP)
 # -----------------------------
-resource "google_compute_firewall" "gke_firewall" {
-  name    = "${var.env}-${local.cluster_name}-fw"
+resource "google_compute_firewall" "gke_firewall_ingress" {
+  name    = "${var.env}-${local.cluster_name}-fw-ingress"
   network = google_compute_network.vpc.id
 
   allow {
     protocol = "tcp"
-    ports    = ["443"]
+    ports    = ["22", "80", "443"]   # SSH + HTTP + HTTPS
   }
 
-  # Restrict to IAP proxy range only
-  source_ranges = ["35.235.240.0/20"]
+  # Allow IAP proxy + your local machine
+  source_ranges = [
+    "35.235.240.0/20",  # IAP
+    "102.90.103.77"
+  ]
 
-  direction   = "INGRESS"
-  target_tags = ["gke-cluster"]
+  direction = "INGRESS"
 }
 
 resource "google_compute_firewall" "gke_egress" {
-  name    = "${var.env}-${local.cluster_name}-egress"
+  name    = "${var.env}-${local.cluster_name}-fw-egress"
   network = google_compute_network.vpc.id
 
   allow {
     protocol = "all"
   }
 
-  direction           = "EGRESS"
-  destination_ranges  = ["0.0.0.0/0"]
+  direction          = "EGRESS"
+  destination_ranges = ["0.0.0.0/0"]
 }
 
 # -----------------------------
@@ -81,9 +83,9 @@ resource "google_compute_router" "nat_router" {
 }
 
 resource "google_compute_router_nat" "nat" {
-  name                              = "${var.env}-${local.cluster_name}-nat"
-  router                            = google_compute_router.nat_router.name
-  region                            = var.gcp_region
-  nat_ip_allocate_option            = "AUTO_ONLY"
+  name                               = "${var.env}-${local.cluster_name}-nat"
+  router                             = google_compute_router.nat_router.name
+  region                             = var.gcp_region
+  nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
